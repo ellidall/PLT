@@ -1,17 +1,12 @@
 enum Lexeme {
     // Ключевые слова
-    ARRAY = 'ARRAY',
-    BEGIN = 'BEGIN',
-    ELSE = 'ELSE',
-    END = 'END',
     IF = 'IF',
-    OF = 'OF',
-    OR = 'OR',
-    PROGRAM = 'PROGRAM',
-    PROCEDURE = 'PROCEDURE',
     THEN = 'THEN',
-    TYPE = 'TYPE',
-    VAR = 'VAR',
+    ELSE = 'ELSE',
+    OR = 'OR',
+    AND = 'AND',
+    DIV = 'DIV',
+    MOD = 'MOD',
 
     // Операторы и знаки пунктуации
     MULTIPLICATION = '*',
@@ -24,14 +19,13 @@ enum Lexeme {
     RIGHT_PAREN = ')',
     LEFT_BRACKET = '[',
     RIGHT_BRACKET = ']',
-    EQ = '=',
     GREATER = '>',
     LESS = '<',
     LESS_EQ = '<=',
     GREATER_EQ = '>=',
-    NOT_EQ = '<>',
+    NOT_EQ = '!=',
     COLON = ':',
-    ASSIGN = ':=',
+    ASSIGN = '=',
     DOT = '.',
     DOUBLE_EQ = '==',
 
@@ -46,7 +40,7 @@ enum Lexeme {
     BLOCK_COMMENT = 'BLOCK_COMMENT',
 
     // Специальные
-    BAD = 'BAD',
+    ERROR = 'ERROR',
     EOF = 'EOF'
 }
 

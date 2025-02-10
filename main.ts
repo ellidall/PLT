@@ -19,7 +19,7 @@ function main() {
 
         const inputText = fs.readFileSync(inputPath, 'utf8')
 
-        const analyzer = new Analyzer('hello world 123')
+        const analyzer = new Analyzer(inputText)
 
         // fs.writeFileSync(outputPath, JSON.stringify(tokens, null, 2), 'utf8');
         // console.log(`Tokens written to ${outputPath}`);

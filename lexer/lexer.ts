@@ -2,18 +2,14 @@ import {Lexeme, Token} from '../globalTypes'
 
 function getKeyword(value: string): Lexeme | undefined {
     const keywords = [
-        Lexeme.ARRAY,
-        Lexeme.BEGIN,
-        Lexeme.ELSE,
-        Lexeme.END,
         Lexeme.IF,
-        Lexeme.OF,
-        Lexeme.OR,
-        Lexeme.PROGRAM,
-        Lexeme.PROCEDURE,
         Lexeme.THEN,
-        Lexeme.TYPE,
-        Lexeme.VAR,
+        Lexeme.ELSE,
+        Lexeme.OR,
+        Lexeme.AND,
+        Lexeme.THEN,
+        Lexeme.DIV,
+        Lexeme.MOD,
     ]
 
     return keywords.find(keyword => keyword === value.toUpperCase()) as Lexeme | undefined
@@ -81,7 +77,7 @@ class Lexer {
                 this.advance()
             } else {
                 return {
-                    type: Lexeme.BAD,
+                    type: Lexeme.ERROR,
                     lexeme: result,
                     position: {line: startLine, column: startColumn},
                 }
@@ -129,7 +125,7 @@ class Lexer {
                     this.advance()
                 }
                 return {
-                    type: Lexeme.BAD,
+                    type: Lexeme.ERROR,
                     lexeme: result,
                     position: {line: startLine, column: startColumn},
                 }
@@ -153,7 +149,7 @@ class Lexer {
 
             if (!/\d/.test(this.currentChar || '')) {
                 return {
-                    type: Lexeme.BAD,
+                    type: Lexeme.ERROR,
                     lexeme: result,
                     position: {line: startLine, column: startColumn},
                 }
@@ -173,7 +169,7 @@ class Lexer {
                 this.advance()
             }
             return {
-                type: Lexeme.BAD,
+                type: Lexeme.ERROR,
                 lexeme: result,
                 position: {line: startLine, column: startColumn},
             }
@@ -185,7 +181,7 @@ class Lexer {
                 this.advance()
             }
             return {
-                type: Lexeme.BAD,
+                type: Lexeme.ERROR,
                 lexeme: result,
                 position: {line: startLine, column: startColumn},
             }
@@ -210,7 +206,7 @@ class Lexer {
 
         if (/[а-яА-Я]/.test(result)) {
             return {
-                type: Lexeme.BAD,
+                type: Lexeme.ERROR,
                 lexeme: result,
                 position: {line: startLine, column: startColumn},
             }
@@ -253,7 +249,7 @@ class Lexer {
         }
 
         return {
-            type: Lexeme.BAD,
+            type: Lexeme.ERROR,
             lexeme: result,
             position: {line: startLine, column: startColumn},
         }
@@ -264,15 +260,6 @@ class Lexer {
         const startLine = this.line
         const char = this.currentChar
 
-        if (char === ':' && this.peek() === '=') {
-            this.advance()
-            this.advance()
-            return {
-                type: Lexeme.ASSIGN,
-                lexeme: ':=',
-                position: {line: startLine, column: startColumn},
-            }
-        }
         if (char === '=' && this.peek() === '=') {
             this.advance()
             this.advance()
@@ -282,12 +269,12 @@ class Lexer {
                 position: {line: startLine, column: startColumn},
             }
         }
-        if (char === '<' && this.peek() === '>') {
+        if (char === '!' && this.peek() === '=') {
             this.advance()
             this.advance()
             return {
                 type: Lexeme.NOT_EQ,
-                lexeme: '<>',
+                lexeme: '!=',
                 position: {line: startLine, column: startColumn},
             }
         }
@@ -303,7 +290,7 @@ class Lexer {
             ')': Lexeme.RIGHT_PAREN,
             '[': Lexeme.LEFT_BRACKET,
             ']': Lexeme.RIGHT_BRACKET,
-            '=': Lexeme.EQ,
+            '=': Lexeme.ASSIGN,
             '>': Lexeme.GREATER,
             '<': Lexeme.LESS,
             ':': Lexeme.COLON,
@@ -321,7 +308,7 @@ class Lexer {
 
         this.advance()
         return {
-            type: Lexeme.BAD,
+            type: Lexeme.ERROR,
             lexeme: char,
             position: {line: startLine, column: startColumn},
         }
