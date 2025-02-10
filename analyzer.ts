@@ -10,12 +10,12 @@ class ExpressionParser {
 
     parseExpression(): boolean {
         try {
-            this.parseTerm();
+            this.parseTerm();  // Парсим термы (сумма/разность)
             while (this.match(Lexeme.PLUS, Lexeme.MINUS)) {
-                this.consume(this.previous().type);
-                this.parseTerm();
+                this.consume(this.previous().type);  // Принимаем оператор +/-
+                this.parseTerm();  // И парсим следующий терм
             }
-            return this.check(Lexeme.EOF);
+            return this.check(Lexeme.EOF);  // Ожидаем завершения выражения
         } catch (error) {
             console.error(`❌ Ошибка: ${error}`);
             return false;
@@ -23,20 +23,20 @@ class ExpressionParser {
     }
 
     private parseTerm(): void {
-        this.parseFactor();
+        this.parseFactor();  // Парсим фактор (умножение/деление)
         while (this.match(Lexeme.MULTIPLY, Lexeme.DIVIDE)) {
-            this.consume(this.previous().type);
-            this.parseFactor();
+            this.consume(this.previous().type);  // Принимаем оператор */ 
+            this.parseFactor();  // И парсим следующий фактор
         }
     }
 
     private parseFactor(): void {
         if (this.match(Lexeme.NUMBER_LITERAL, Lexeme.IDENTIFIER)) {
-            this.consume(this.previous().type);
+            this.consume(this.previous().type);  // Читаем число или идентификатор
         } else if (this.match(Lexeme.LEFT_PAREN)) {
-            this.consume(Lexeme.LEFT_PAREN);
-            this.parseExpression();
-            this.consume(Lexeme.RIGHT_PAREN);
+            this.consume(Lexeme.LEFT_PAREN);  // Ожидаем открывающую скобку
+            this.parseExpression();  // Рекурсивно парсим выражение внутри скобок
+            this.consume(Lexeme.RIGHT_PAREN);  // Закрывающая скобка
         } else {
             throw `Ожидалось число, идентификатор или '(', найдено '${this.peek()?.lexeme}'`;
         }
