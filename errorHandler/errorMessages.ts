@@ -7,6 +7,7 @@ enum ErrorCode {
     E006 = 'E006',
     E007 = 'E007',
     E008 = 'E008',
+    E000 = 'E000',
 }
 
 const errorMessages = {
