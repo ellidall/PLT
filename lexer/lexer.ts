@@ -278,13 +278,31 @@ class Lexer {
                 position: {line: startLine, column: startColumn},
             }
         }
+        if (char === '>' && this.peek() === '=') {
+            this.advance()
+            this.advance()
+            return {
+                type: Lexeme.GREATER_EQ,
+                lexeme: '>=',
+                position: {line: startLine, column: startColumn},
+            }
+        }
+        if (char === '<' && this.peek() === '=') {
+            this.advance()
+            this.advance()
+            return {
+                type: Lexeme.LESS_EQ,
+                lexeme: '<=',
+                position: {line: startLine, column: startColumn},
+            }
+        }
 
         const singleCharOperators: Record<string, Lexeme> = {
             '*': Lexeme.MULTIPLICATION,
             '+': Lexeme.PLUS,
             '-': Lexeme.MINUS,
             '/': Lexeme.DIVIDE,
-            '': Lexeme.SEMICOLON,
+            ';': Lexeme.SEMICOLON,
             ',': Lexeme.COMMA,
             '(': Lexeme.LEFT_PAREN,
             ')': Lexeme.RIGHT_PAREN,
