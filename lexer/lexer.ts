@@ -1,4 +1,4 @@
-import {Lexeme, Token} from './globalTypes'
+import {Lexeme, Token} from '../globalTypes'
 
 function getKeyword(value: string): Lexeme | undefined {
     const keywords = [

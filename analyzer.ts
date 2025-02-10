@@ -1,4 +1,4 @@
-import {Lexer} from './lexer'
+import {Lexer} from './lexer/lexer'
 import {Lexeme, Token} from './globalTypes'
 
 function getEnumName(value: string): string | undefined {
