@@ -1,77 +1,71 @@
-import { Lexeme, Token } from './globalTypes';
-import { ExpressionParser, Analyzer } from './analyzer';
+import { SyntaxAnalizator } from './analyzer';
+import { Token, Lexeme, Position } from './globalTypes';
 
-// Пример тестов для проверки корректности работы парсера
+function runTest(input: string): void {
+  const syntaxAnalizator = new SyntaxAnalizator();
+  const output = (message: string) => console.log(message);
 
-function runTest(tokens: Token[], expected: boolean): void {
-    const parser = new ExpressionParser(tokens);
-    const result = parser.parseExpression();
-    if (result === expected) {
-        console.log(`✅ Тест прошел успешно!`);
-    } else {
-        console.log(`❌ Тест не прошел.`);
-    }
+  console.log(`Testing input: ${input}`);
+
+  // Преобразуем строку во множество токенов
+  const tokens = tokenize(input);
+  syntaxAnalizator.scanExpression(tokens, output);
 }
 
-// Тест 1: Простое сложение
-const tokens1: Token[] = [
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '5', position: { line: 1, column: 1 } },
-    { type: Lexeme.PLUS, lexeme: '+', position: { line: 1, column: 2 } },
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '3', position: { line: 1, column: 3 } },
-    { type: Lexeme.EOF, lexeme: '', position: { line: 1, column: 4 } }
-];
-runTest(tokens1, true);  // Ожидаем успешный результат
+// Функция для токенизации входной строки
+function tokenize(input: string): Token[] {
+  const tokens: Token[] = [];
+  let column = 1;
 
-// Тест 2: Выражение с умножением
-const tokens2: Token[] = [
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '2', position: { line: 1, column: 1 } },
-    { type: Lexeme.MULTIPLY, lexeme: '*', position: { line: 1, column: 2 } },
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '3', position: { line: 1, column: 3 } },
-    { type: Lexeme.EOF, lexeme: '', position: { line: 1, column: 4 } }
-];
-runTest(tokens2, true);  // Ожидаем успешный результат
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
 
-// Тест 3: Выражение с операциями разного приоритета
-const tokens3: Token[] = [
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '2', position: { line: 1, column: 1 } },
-    { type: Lexeme.PLUS, lexeme: '+', position: { line: 1, column: 2 } },
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '3', position: { line: 1, column: 3 } },
-    { type: Lexeme.MULTIPLY, lexeme: '*', position: { line: 1, column: 4 } },
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '4', position: { line: 1, column: 5 } },
-    { type: Lexeme.EOF, lexeme: '', position: { line: 1, column: 6 } }
-];
-runTest(tokens3, true);  // Ожидаем успешный результат
+    if (char === ' ') {
+      column++;
+      continue; // Пропускаем пробелы
+    }
 
-// Тест 4: Выражение с скобками
-const tokens4: Token[] = [
-    { type: Lexeme.LEFT_PAREN, lexeme: '(', position: { line: 1, column: 1 } },
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '5', position: { line: 1, column: 2 } },
-    { type: Lexeme.PLUS, lexeme: '+', position: { line: 1, column: 3 } },
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '3', position: { line: 1, column: 4 } },
-    { type: Lexeme.RIGHT_PAREN, lexeme: ')', position: { line: 1, column: 5 } },
-    { type: Lexeme.EOF, lexeme: '', position: { line: 1, column: 6 } }
-];
-runTest(tokens4, true);  // Ожидаем успешный результат
+    let lexeme: string = char;
+    let type: Lexeme | null = null;
 
-// Тест 5: Ошибка (неправильная последовательность)
-const tokens5: Token[] = [
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '5', position: { line: 1, column: 1 } },
-    { type: Lexeme.PLUS, lexeme: '+', position: { line: 1, column: 2 } },
-    { type: Lexeme.MULTIPLY, lexeme: '*', position: { line: 1, column: 3 } },
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '3', position: { line: 1, column: 4 } },
-    { type: Lexeme.EOF, lexeme: '', position: { line: 1, column: 5 } }
-];
-runTest(tokens5, false);  // Ожидаем ошибку, так как операторы неправильно расположены
+    // Определяем тип токена
+    if (/[a-zA-Z]/.test(char)) {
+      type = Lexeme.IDENTIFIER;
+    } else if (/\d/.test(char)) {
+      type = Lexeme.NUMBER_LITERAL;
+    } else if (char === '+') {
+      type = Lexeme.PLUS;
+    } else if (char === '*') {
+      type = Lexeme.MULTIPLY;
+    } else if (char === '(') {
+      type = Lexeme.LEFT_PAREN;
+    } else if (char === ')') {
+      type = Lexeme.RIGHT_PAREN;
+    } else if (char === '<') {
+      type = Lexeme.RELATIONAL_OPERATOR;
+    } else if (char === '&') {
+      lexeme += input[++i];  // Обрабатываем `&&`
+      type = Lexeme.RELATIONAL_OPERATOR;
+    } else {
+      throw new Error(`Unexpected character: ${char}`);
+    }
 
-// Тест 6: Скобки, умножение и деление
-const tokens6: Token[] = [
-    { type: Lexeme.LEFT_PAREN, lexeme: '(', position: { line: 1, column: 1 } },
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '2', position: { line: 1, column: 2 } },
-    { type: Lexeme.PLUS, lexeme: '+', position: { line: 1, column: 3 } },
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '3', position: { line: 1, column: 4 } },
-    { type: Lexeme.RIGHT_PAREN, lexeme: ')', position: { line: 1, column: 5 } },
-    { type: Lexeme.MULTIPLY, lexeme: '*', position: { line: 1, column: 6 } },
-    { type: Lexeme.NUMBER_LITERAL, lexeme: '4', position: { line: 1, column: 7 } },
-    { type: Lexeme.EOF, lexeme: '', position: { line: 1, column: 8 } }
-];
-runTest(tokens6, true);  // Ожидаем успешный результат
+    tokens.push({
+      type: type!,
+      lexeme: lexeme,
+      position: { line: 1, column: column }
+    });
+
+    column++;
+  }
+
+  return tokens;
+}
+
+// Тесты
+runTest('x + y');  // Простой пример с переменными
+runTest('a * (b + c)');  // Пример с операторами и скобками
+runTest('f(x, y)');  // Вызов функции
+runTest('5 + 3 * 2');  // Операции с приоритетом
+runTest('a < b && c > d');  // Сложные выражения с операторами
+runTest('x+++++++y');  // Ошибка с множественными операторами
