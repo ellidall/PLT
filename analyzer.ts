@@ -82,12 +82,21 @@ class SyntaxAnalyzer {
 
     if (token === Rule.RULE_NUMBER_LITERAL || token === Rule.RULE_IDENTIFIER) {
       this.advance();
+      
       // Проверка на индексацию массива [expr]
       while (this.match(Rule.LEFT_BRACKET)) {
         if (!this.parseExpression() || !this.match(Rule.RIGHT_BRACKET)) {
           return false;
         }
       }
+      
+      // Проверка на вызов функции (expr, expr, ...)
+      if (this.match(Rule.LEFT_PAREN)) {
+        if (!this.parseArgumentList() || !this.match(Rule.RIGHT_PAREN)) {
+          return false;
+        }
+      }
+      
       return true;
     }
 
@@ -99,6 +108,20 @@ class SyntaxAnalyzer {
     }
     
     return false;
+  }
+
+  private parseArgumentList(): boolean {
+    if (this.match(Rule.RIGHT_PAREN)) {
+      return true; // Пустой список аргументов
+    }
+    
+    do {
+      if (!this.parseExpression()) {
+        return false;
+      }
+    } while (this.match(Rule.COMMA));
+    
+    return true;
   }
 
   private match(...expectedTypes: Rule[]): boolean {

@@ -129,6 +129,9 @@ function lexemeToRule(token: Token): Rule | null {
         case Lexeme.RIGHT_PAREN:
             return Rule.RIGHT_PAREN;
 
+        case Lexeme.COMMA:
+            return Rule.COMMA;
+
         default:
             return Rule.ERROR; // Возвращаем null, если лексема не соответствует ни одному правилу
     }
@@ -137,7 +140,7 @@ function lexemeToRule(token: Token): Rule | null {
 const syntaxAnalyzer = new SyntaxAnalyzer();
 const output = (message: string) => console.log(message);
 
-const input = 'a[7][a+5][5] OR 15 * (r - br MOD 5)'
+const input = '.'
 const lexer = new Lexer(input)
 const tokens = lexer.tokenize()
 const rules = tokens.filter(lexemeToRule => lexemeToRule.type != Lexeme.EOF).map(

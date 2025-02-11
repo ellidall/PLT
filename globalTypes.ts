@@ -10,6 +10,7 @@ enum Rule {
     RIGHT_PAREN = 'RIGHT_PAREN',
     LEFT_BRACKET = '[',
     RIGHT_BRACKET = ']',
+    COMMA = ',',
     ERROR = "ERROR_RULE",
   }
 
