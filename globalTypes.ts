@@ -8,6 +8,8 @@ enum Rule {
     RULE_IDENTIFIER = 'IDENTIFIER',
     LEFT_PAREN = 'LEFT_PAREN',
     RIGHT_PAREN = 'RIGHT_PAREN',
+    LEFT_BRACKET = '[',
+    RIGHT_BRACKET = ']',
     ERROR = "ERROR_RULE",
   }
 

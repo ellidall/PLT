@@ -82,6 +82,12 @@ class SyntaxAnalyzer {
 
     if (token === Rule.RULE_NUMBER_LITERAL || token === Rule.RULE_IDENTIFIER) {
       this.advance();
+      // Проверка на индексацию массива [expr]
+      while (this.match(Rule.LEFT_BRACKET)) {
+        if (!this.parseExpression() || !this.match(Rule.RIGHT_BRACKET)) {
+          return false;
+        }
+      }
       return true;
     }
 

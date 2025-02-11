@@ -111,6 +111,11 @@ function lexemeToRule(token: Token): Rule | null {
         case Lexeme.RIGHT_PAREN:
             return Rule.RIGHT_PAREN
 
+        case Lexeme.LEFT_BRACKET:
+            return Rule.LEFT_BRACKET
+        case Lexeme.RIGHT_BRACKET:
+            return Rule.RIGHT_BRACKET
+
         case Lexeme.INTEGER:
         case Lexeme.FLOAT:
             return Rule.RULE_NUMBER_LITERAL;
@@ -132,7 +137,7 @@ function lexemeToRule(token: Token): Rule | null {
 const syntaxAnalyzer = new SyntaxAnalyzer();
 const output = (message: string) => console.log(message);
 
-const input = 'fn(a)'
+const input = 'a[7][a+5][5] OR 15 * (r - br MOD 5)'
 const lexer = new Lexer(input)
 const tokens = lexer.tokenize()
 const rules = tokens.filter(lexemeToRule => lexemeToRule.type != Lexeme.EOF).map(
