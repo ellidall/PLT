@@ -1,9 +1,9 @@
 import { ErrorHandler } from './errorHandler';
 import { ErrorCode } from './errorMessages';
-import { Token, Lexeme } from './globalTypes';
+import { Token, Rule } from './globalTypes';
 
 class SyntaxAnalyzer {
-  private tokens: Token[] = [];
+  private rules: Rule[] = [];
   private currentIndex: number = 0;
   private errorHandler: ErrorHandler;
 
@@ -11,8 +11,8 @@ class SyntaxAnalyzer {
     this.errorHandler = new ErrorHandler();
   }
 
-  public scanExpression(tokens: Token[], output: (message: string) => void): void {
-    this.tokens = tokens;
+  public scanExpression(rules: Rule[], output: (message: string) => void): void {
+    this.rules = rules;
     this.currentIndex = 0;
     this.errorHandler.clearErrors();
 
@@ -32,18 +32,14 @@ class SyntaxAnalyzer {
       return false;
     }
 
-    // Обработка операндов типа PLUSO (+, -, OR)
-    while (this.match(Lexeme.PLUSO)) {
+    while (this.match(Rule.PLUS) || this.match(Rule.MINUS)) {
       if (!this.parseTerm()) {
-        this.errorHandler.addError(ErrorCode.E009, this.currentToken());
         return false;
       }
     }
 
-    // Обработка операторов типа RELATION_OPERATOR (==, !=, <, >, <=, >=)
-    while (this.match(Lexeme.RELATION_OPERATOR)) {
+    while (this.match(Rule.RELATION_OPERATOR)) {
       if (!this.parseTerm()) {
-        this.errorHandler.addError(ErrorCode.E009, this.currentToken());
         return false;
       }
     }
@@ -56,10 +52,8 @@ class SyntaxAnalyzer {
       return false;
     }
 
-    // Обработка операторов типа MULO (*, /, %)
-    while (this.match(Lexeme.MULO)) {
+    while (this.match(Rule.MULO)) {
       if (!this.parseFactor()) {
-        this.errorHandler.addError(ErrorCode.E009, this.currentToken());
         return false;
       }
     }
@@ -68,41 +62,47 @@ class SyntaxAnalyzer {
   }
 
   private parseFactor(): boolean {
-    const token = this.currentToken();
-
+    const token = this.currentRule();
     if (!token) {
       return false;
     }
 
-    // Обработка токенов типа NUMBER_LITERAL и IDENTIFIER
-    if (token.type === Lexeme.NUMBER_LITERAL || token.type === Lexeme.IDENTIFIER) {
+    // Обработка унарного минуса (-)
+    if (this.match(Rule.MINUS)) {
+      if (this.match(Rule.RULE_IDENTIFIER) || this.match(Rule.RULE_NUMBER_LITERAL) || this.match(Rule.LEFT_PAREN)) {
+        return true;
+      }
+      return false;
+    }
+
+    // Унарный плюс (+) не должен проходить
+    if (this.match(Rule.PLUS)) {
+      return false;
+    }
+
+    if (token === Rule.RULE_NUMBER_LITERAL || token === Rule.RULE_IDENTIFIER) {
       this.advance();
       return true;
     }
 
-    // Обработка выражений в скобках
-    if (this.match(Lexeme.LEFT_PAREN)) {
-      if (!this.parseExpression() || !this.match(Lexeme.RIGHT_PAREN)) {
-        this.errorHandler.addError(ErrorCode.E009, this.currentToken());
+    if (this.match(Rule.LEFT_PAREN)) {
+      if (!this.parseExpression() || !this.match(Rule.RIGHT_PAREN)) {
         return false;
       }
       return true;
     }
-
-    this.errorHandler.addError(ErrorCode.E009, token);
+    
     return false;
   }
 
-  private match(...expectedTypes: Lexeme[]): boolean {
+  private match(...expectedTypes: Rule[]): boolean {
     if (this.isEnd()) {
       return false;
     }
-
-    if (expectedTypes.includes(this.currentToken()?.type!)) {
+    if (expectedTypes.includes(this.currentRule())) {
       this.advance();
       return true;
     }
-
     return false;
   }
 
@@ -112,12 +112,12 @@ class SyntaxAnalyzer {
     }
   }
 
-  private currentToken(): Token | undefined {
-    return this.tokens[this.currentIndex];
+  private currentRule(): Rule | undefined {
+    return this.rules[this.currentIndex];
   }
 
   private isEnd(): boolean {
-    return this.currentIndex >= this.tokens.length;
+    return this.currentIndex >= this.rules.length;
   }
 }
 

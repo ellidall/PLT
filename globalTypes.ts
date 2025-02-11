@@ -1,13 +1,62 @@
-enum Lexeme {
+enum Rule {
     RELATION_OPERATOR = 'RELATION_OPERATOR',  // == | != | < | > | <= | >=
-    PLUSO = 'PLUSO',  // + | - | OR
+    PLUS = '+',  // + | - | OR
+    MINUS = '-',
     MULO = 'MULO',  // AND | * | / | MOD | DIV
     SUPO = 'SUPO',  // = (унарное) | () | not
-    NUMBER_LITERAL = 'NUMBER_LITERAL',
-    IDENTIFIER = 'IDENTIFIER',
+    RULE_NUMBER_LITERAL = 'NUMBER_LITERAL',
+    RULE_IDENTIFIER = 'IDENTIFIER',
     LEFT_PAREN = 'LEFT_PAREN',
     RIGHT_PAREN = 'RIGHT_PAREN',
+    ERROR = "ERROR_RULE",
   }
+
+  enum Lexeme {
+    // Ключевые слова
+    IF = 'IF',
+    THEN = 'THEN',
+    ELSE = 'ELSE',
+    OR = 'OR',
+    AND = 'AND',
+    DIV = 'DIV',
+    MOD = 'MOD',
+
+    // Операторы и знаки пунктуации
+    MULTIPLICATION = '*',
+    PLUS = '+',
+    MINUS = '-',
+    DIVIDE = '/',
+    SEMICOLON = ';',
+    COMMA = ',',
+    LEFT_PAREN = '(',
+    RIGHT_PAREN = ')',
+    LEFT_BRACKET = '[',
+    RIGHT_BRACKET = ']',
+    GREATER = '>',
+    LESS = '<',
+    LESS_EQ = '<=',
+    GREATER_EQ = '>=',
+    NOT_EQ = '!=',
+    COLON = ':',
+    ASSIGN = '=',
+    DOT = '.',
+    DOUBLE_EQ = '==',
+
+    // Литералы и идентификаторы
+    IDENTIFIER = 'IDENTIFIER',
+    STRING = 'STRING',
+    INTEGER = 'INTEGER',
+    FLOAT = 'FLOAT',
+
+    // Комментарии
+    LINE_COMMENT = 'LINE_COMMENT',
+    BLOCK_COMMENT = 'BLOCK_COMMENT',
+
+    // Специальные
+    ERROR = 'ERROR',
+    EOF = 'EOF'
+}
+
 
   type Position = {
     line: number;
@@ -18,6 +67,6 @@ enum Lexeme {
     type: Lexeme;
     lexeme: string;
     position: Position;
-  };
+};
 
-  export { Lexeme, Position, Token };
+  export { Rule, Lexeme, Position, Token };
