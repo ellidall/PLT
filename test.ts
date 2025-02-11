@@ -1,71 +1,85 @@
-import { SyntaxAnalizator } from './analyzer';
+import { SyntaxAnalyzer } from './analyzer';
 import { Token, Lexeme, Position } from './globalTypes';
 
-function runTest(input: string): void {
-  const syntaxAnalizator = new SyntaxAnalizator();
+function runTest(tokens: Token[]): void {
+  const syntaxAnalyzer = new SyntaxAnalyzer();
   const output = (message: string) => console.log(message);
 
-  console.log(`Testing input: ${input}`);
+  console.log('Testing input tokens:', tokens);
 
-  // Преобразуем строку во множество токенов
-  const tokens = tokenize(input);
-  syntaxAnalizator.scanExpression(tokens, output);
-}
-
-// Функция для токенизации входной строки
-function tokenize(input: string): Token[] {
-  const tokens: Token[] = [];
-  let column = 1;
-
-  for (let i = 0; i < input.length; i++) {
-    const char = input[i];
-
-    if (char === ' ') {
-      column++;
-      continue; // Пропускаем пробелы
-    }
-
-    let lexeme: string = char;
-    let type: Lexeme | null = null;
-
-    // Определяем тип токена
-    if (/[a-zA-Z]/.test(char)) {
-      type = Lexeme.IDENTIFIER;
-    } else if (/\d/.test(char)) {
-      type = Lexeme.NUMBER_LITERAL;
-    } else if (char === '+') {
-      type = Lexeme.PLUS;
-    } else if (char === '*') {
-      type = Lexeme.MULTIPLY;
-    } else if (char === '(') {
-      type = Lexeme.LEFT_PAREN;
-    } else if (char === ')') {
-      type = Lexeme.RIGHT_PAREN;
-    } else if (char === '<') {
-      type = Lexeme.RELATIONAL_OPERATOR;
-    } else if (char === '&') {
-      lexeme += input[++i];  // Обрабатываем `&&`
-      type = Lexeme.RELATIONAL_OPERATOR;
+  syntaxAnalyzer.scanExpression(tokens, (message: string, position?: Position) => {
+    if (message.includes('Unexpected token')) {
+      output(`Debug: ERROR at ${position?.line}:${position?.column}: ${message}`);
     } else {
-      throw new Error(`Unexpected character: ${char}`);
+      output(`Debug: ${message}`);
     }
-
-    tokens.push({
-      type: type!,
-      lexeme: lexeme,
-      position: { line: 1, column: column }
-    });
-
-    column++;
-  }
-
-  return tokens;
+  });
 }
 
-// Тесты
-runTest('x + y');  // Простой пример с переменными
-runTest('a * (b + c)');  // Пример с операторами и скобками
-runTest('f(x, y)');  // Вызов функции
-runTest('5 + 3 * 2');  // Операции с приоритетом
-runTest('a < b && c > d');  // Сложные выражения с операторами
-runTest('x+++++++y');  // Ошибка с множественными операторами
+// Тестовые случаи с токенами напрямую
+const testCases: Token[][] = [
+  [
+    { type: Lexeme.IDENTIFIER, lexeme: 'x', position: { line: 1, column: 1 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 3 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'y', position: { line: 1, column: 5 } },
+  ],
+  [
+    { type: Lexeme.IDENTIFIER, lexeme: 'a', position: { line: 1, column: 1 } },
+    { type: Lexeme.MULO, lexeme: '*', position: { line: 1, column: 3 } },
+    { type: Lexeme.LEFT_PAREN, lexeme: '(', position: { line: 1, column: 5 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'b', position: { line: 1, column: 6 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 8 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'c', position: { line: 1, column: 10 } },
+    { type: Lexeme.RIGHT_PAREN, lexeme: ')', position: { line: 1, column: 11 } },
+  ],
+  [
+    { type: Lexeme.NUMBER_LITERAL, lexeme: '5', position: { line: 1, column: 1 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 3 } },
+    { type: Lexeme.NUMBER_LITERAL, lexeme: '3', position: { line: 1, column: 5 } },
+    { type: Lexeme.MULO, lexeme: '*', position: { line: 1, column: 7 } },
+    { type: Lexeme.NUMBER_LITERAL, lexeme: '2', position: { line: 1, column: 9 } },
+  ],
+  [
+    { type: Lexeme.IDENTIFIER, lexeme: 'a', position: { line: 1, column: 1 } },
+    { type: Lexeme.RELATION_OPERATOR, lexeme: '<', position: { line: 1, column: 3 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'b', position: { line: 1, column: 5 } },
+  ],
+  [
+    { type: Lexeme.IDENTIFIER, lexeme: 'x', position: { line: 1, column: 1 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 2 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 3 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 4 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 5 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 6 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 7 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'y', position: { line: 1, column: 8 } },
+  ],
+  [
+    { type: Lexeme.IDENTIFIER, lexeme: 'x', position: { line: 1, column: 1 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 2 } },
+    { type: Lexeme.LEFT_PAREN, lexeme: '(', position: { line: 1, column: 3 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'x', position: { line: 1, column: 4 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 5 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 6 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'y', position: { line: 1, column: 7 } },
+    { type: Lexeme.RIGHT_PAREN, lexeme: ')', position: { line: 1, column: 8 } },
+  ],
+  [
+    { type: Lexeme.LEFT_PAREN, lexeme: '(', position: { line: 1, column: 1 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'x', position: { line: 1, column: 2 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 3 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'x', position: { line: 1, column: 4 } },
+    { type: Lexeme.RIGHT_PAREN, lexeme: ')', position: { line: 1, column: 5 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 6 } },
+    { type: Lexeme.LEFT_PAREN, lexeme: '(', position: { line: 1, column: 7 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'x', position: { line: 1, column: 8 } },
+    { type: Lexeme.PLUSO, lexeme: '+', position: { line: 1, column: 9 } },
+    { type: Lexeme.IDENTIFIER, lexeme: 'x', position: { line: 1, column: 10 } },
+    { type: Lexeme.RIGHT_PAREN, lexeme: ')', position: { line: 1, column: 11 } },
+  ],
+];
+
+// Запуск тестов
+for (const testCase of testCases) {
+  runTest(testCase);
+}

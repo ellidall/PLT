@@ -2,182 +2,123 @@ import { ErrorHandler } from './errorHandler';
 import { ErrorCode } from './errorMessages';
 import { Token, Lexeme } from './globalTypes';
 
-class SyntaxAnalizator {
-  private m_tokenList: Token[] = [];
-  private m_tokenIterator: Token[];
-  private m_errorHandler: ErrorHandler;
+class SyntaxAnalyzer {
+  private tokens: Token[] = [];
+  private currentIndex: number = 0;
+  private errorHandler: ErrorHandler;
 
   constructor() {
-    this.m_tokenIterator = this.m_tokenList;
-    this.m_errorHandler = new ErrorHandler();
+    this.errorHandler = new ErrorHandler();
   }
 
   public scanExpression(tokens: Token[], output: (message: string) => void): void {
-    // Используем переданный список токенов
-    this.m_tokenList = tokens;
-    this.m_tokenIterator = this.m_tokenList;
+    this.tokens = tokens;
+    this.currentIndex = 0;
+    this.errorHandler.clearErrors();
 
-    if (this.isExpression() && !this.m_errorHandler.hasErrors()) {
+    const isValid = this.parseExpression();
+    const hasErrors = this.errorHandler.hasErrors();
+
+    if (isValid && !hasErrors && this.isEnd()) {
       output('OK');
     } else {
       output('ERROR');
-      // Вывод ошибок
-      console.log(this.m_errorHandler.getErrors().join('\n'));
+      console.log(this.errorHandler.getErrors().join('\n'));
     }
   }
 
-  private isExpression(): boolean {
-    // Начинаем анализ выражения, только если оно действительно выражение
-    if (this.isSimExp()) {
-      if (this.isRel()) {
-        // Анализируем дальнейшие части выражения
-        if (this.isExpression()) {
-          return true;
-        }
-        this.m_errorHandler.addError(ErrorCode.E009, this.currentToken());
+  private parseExpression(): boolean {
+    if (!this.parseTerm()) {
+      return false;
+    }
+
+    // Обработка операндов типа PLUSO (+, -, OR)
+    while (this.match(Lexeme.PLUSO)) {
+      if (!this.parseTerm()) {
+        this.errorHandler.addError(ErrorCode.E009, this.currentToken());
+        return false;
+      }
+    }
+
+    // Обработка операторов типа RELATION_OPERATOR (==, !=, <, >, <=, >=)
+    while (this.match(Lexeme.RELATION_OPERATOR)) {
+      if (!this.parseTerm()) {
+        this.errorHandler.addError(ErrorCode.E009, this.currentToken());
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private parseTerm(): boolean {
+    if (!this.parseFactor()) {
+      return false;
+    }
+
+    // Обработка операторов типа MULO (*, /, %)
+    while (this.match(Lexeme.MULO)) {
+      if (!this.parseFactor()) {
+        this.errorHandler.addError(ErrorCode.E009, this.currentToken());
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private parseFactor(): boolean {
+    const token = this.currentToken();
+
+    if (!token) {
+      return false;
+    }
+
+    // Обработка токенов типа NUMBER_LITERAL и IDENTIFIER
+    if (token.type === Lexeme.NUMBER_LITERAL || token.type === Lexeme.IDENTIFIER) {
+      this.advance();
+      return true;
+    }
+
+    // Обработка выражений в скобках
+    if (this.match(Lexeme.LEFT_PAREN)) {
+      if (!this.parseExpression() || !this.match(Lexeme.RIGHT_PAREN)) {
+        this.errorHandler.addError(ErrorCode.E009, this.currentToken());
         return false;
       }
       return true;
     }
+
+    this.errorHandler.addError(ErrorCode.E009, token);
     return false;
   }
 
-  private isSimExp(): boolean {
-    const token = this.currentToken();
-    if (!token) {
-      return false; // Если токенов нет, сразу возвращаем false
-    }
-    if (token.type === Lexeme.NUMBER_LITERAL || token.type === Lexeme.IDENTIFIER) {
-      this.m_tokenIterator.shift(); // Пропускаем текущий токен
-      return true;
-    }
-    if (this.isPluso()) {
-      if (this.isSimTerm()) {
-        return true;
-      }
-    }
-    if (this.isMulo()) {
-      if (this.isSimTerm()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private isRel(): boolean {
-    const token = this.currentToken();
-    if (!token) {
+  private match(...expectedTypes: Lexeme[]): boolean {
+    if (this.isEnd()) {
       return false;
     }
-    if (token.type === Lexeme.RELATIONAL_OPERATOR) {
-      this.m_tokenIterator.shift();
+
+    if (expectedTypes.includes(this.currentToken()?.type!)) {
+      this.advance();
       return true;
     }
+
     return false;
   }
 
-  private isPluso(): boolean {
-    const token = this.currentToken();
-    if (!token) {
-      return false;
+  private advance(): void {
+    if (!this.isEnd()) {
+      this.currentIndex++;
     }
-    if (token.type === Lexeme.PLUS) {
-      this.m_tokenIterator.shift();
-      return true;
-    }
-    return false;
-  }
-
-  private isMulo(): boolean {
-    const token = this.currentToken();
-    if (!token) {
-      return false;
-    }
-    if (token.type === Lexeme.MULTIPLY) {
-      this.m_tokenIterator.shift();
-      return true;
-    }
-    return false;
-  }
-
-  private isSimTerm(): boolean {
-    // Мы считаем, что для простых терминов достаточно просто проверить на идентификаторы или литералы
-    return this.isIdentifier() || this.isNumberLiteral();
-  }
-
-  private isTerm(): boolean {
-    if (this.isCallFunc()) {
-      return true;
-    }
-    if (this.isListInd()) {
-      return true;
-    }
-    return this.isSimTerm(); // Если это простой термин
-  }
-
-  private isCallFunc(): boolean {
-    const token = this.currentToken();
-    if (!token) {
-      return false;
-    }
-    if (token.type === Lexeme.IDENTIFIER) {
-      this.m_tokenIterator.shift(); // Пропускаем идентификатор функции
-      if (this.isPluso() || this.isMulo()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private isListInd(): boolean {
-    const token = this.currentToken();
-    if (!token) {
-      return false;
-    }
-    if (token.type === Lexeme.LEFT_PAREN) {
-      this.m_tokenIterator.shift();
-      if (this.isExpression()) {
-        const nextToken = this.currentToken();
-        if (nextToken && nextToken.type === Lexeme.RIGHT_PAREN) {
-          this.m_tokenIterator.shift(); // Закрывающая скобка
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  private isIdentifier(): boolean {
-    const token = this.currentToken();
-    if (!token) {
-      return false;
-    }
-    if (token.type === Lexeme.IDENTIFIER) {
-      this.m_tokenIterator.shift();
-      return true;
-    }
-    return false;
-  }
-
-  private isNumberLiteral(): boolean {
-    const token = this.currentToken();
-    if (!token) {
-      return false;
-    }
-    if (token.type === Lexeme.NUMBER_LITERAL) {
-      this.m_tokenIterator.shift();
-      return true;
-    }
-    return false;
-  }
-
-  private isTokensEnd(): boolean {
-    return this.m_tokenIterator.length === 0;
   }
 
   private currentToken(): Token | undefined {
-    return this.m_tokenIterator[0];
+    return this.tokens[this.currentIndex];
+  }
+
+  private isEnd(): boolean {
+    return this.currentIndex >= this.tokens.length;
   }
 }
 
-export { SyntaxAnalizator };
+export { SyntaxAnalyzer };
