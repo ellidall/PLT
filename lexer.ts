@@ -10,6 +10,9 @@ function getKeyword(value: string): Lexeme | undefined {
         Lexeme.THEN,
         Lexeme.DIV,
         Lexeme.MOD,
+        Lexeme.NOT,
+        Lexeme.TRUE,
+        Lexeme.FALSE,
     ]
 
     return keywords.find(keyword => keyword === value.toUpperCase()) as Lexeme | undefined
@@ -313,6 +316,7 @@ class Lexer {
             '<': Lexeme.LESS,
             ':': Lexeme.COLON,
             '.': Lexeme.DOT,
+            '!': Lexeme.NEGATION,
         }
 
         if (singleCharOperators[char]) {

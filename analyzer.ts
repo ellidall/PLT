@@ -67,13 +67,32 @@ class SyntaxAnalyzer {
       return false;
     }
 
+    if (this.match(Rule.NOT)) {
+        if (this.match(Rule.LEFT_PAREN)) {
+          if (!this.parseExpression() || !this.match(Rule.RIGHT_PAREN)) {
+            return false;
+          }
+          return true;
+        }
+        if (this.match(Rule.RULE_IDENTIFIER) || this.match(Rule.RULE_NUMBER_LITERAL)) {
+          return true;
+        }
+        return false;
+      }
+      
     // Обработка унарного минуса (-)
     if (this.match(Rule.MINUS)) {
-      if (this.match(Rule.RULE_IDENTIFIER) || this.match(Rule.RULE_NUMBER_LITERAL) || this.match(Rule.LEFT_PAREN)) {
-        return true;
+        if (this.match(Rule.LEFT_PAREN)) {
+          if (!this.parseExpression() || !this.match(Rule.RIGHT_PAREN)) {
+            return false;
+          }
+          return true;
+        }
+        if (this.match(Rule.RULE_IDENTIFIER) || this.match(Rule.RULE_NUMBER_LITERAL)) {
+          return true;
+        }
+        return false;
       }
-      return false;
-    }
 
     // Унарный плюс (+) не должен проходить
     if (this.match(Rule.PLUS)) {
@@ -94,6 +113,20 @@ class SyntaxAnalyzer {
       if (this.match(Rule.LEFT_PAREN)) {
         if (!this.parseArgumentList() || !this.match(Rule.RIGHT_PAREN)) {
           return false;
+        }
+      }
+      
+      // Проверка на обращение к полю объекта (a.b, a.fn())
+      while (this.match(Rule.DOT)) {
+        if (!this.match(Rule.RULE_IDENTIFIER)) {
+          return false;
+        }
+        
+        // Вызов метода объекта a.fn()
+        if (this.match(Rule.LEFT_PAREN)) {
+          if (!this.parseArgumentList() || !this.match(Rule.RIGHT_PAREN)) {
+            return false;
+          }
         }
       }
       

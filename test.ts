@@ -118,6 +118,8 @@ function lexemeToRule(token: Token): Rule | null {
 
         case Lexeme.INTEGER:
         case Lexeme.FLOAT:
+        case Lexeme.TRUE:
+        case Lexeme.FALSE:
             return Rule.RULE_NUMBER_LITERAL;
 
         case Lexeme.IDENTIFIER:
@@ -131,6 +133,11 @@ function lexemeToRule(token: Token): Rule | null {
 
         case Lexeme.COMMA:
             return Rule.COMMA;
+        case Lexeme.DOT:
+            return Rule.DOT;
+        
+        case Lexeme.NOT:
+            return Rule.NOT;
 
         default:
             return Rule.ERROR; // Возвращаем null, если лексема не соответствует ни одному правилу
@@ -140,7 +147,7 @@ function lexemeToRule(token: Token): Rule | null {
 const syntaxAnalyzer = new SyntaxAnalyzer();
 const output = (message: string) => console.log(message);
 
-const input = '.'
+const input = 'NOT(-a + 5.3E-15 * (-a + -b * (a * -b) -c) != abc)'
 const lexer = new Lexer(input)
 const tokens = lexer.tokenize()
 const rules = tokens.filter(lexemeToRule => lexemeToRule.type != Lexeme.EOF).map(

@@ -11,6 +11,8 @@ enum Rule {
     LEFT_BRACKET = '[',
     RIGHT_BRACKET = ']',
     COMMA = ',',
+    DOT = '.',
+    NOT = 'NOT',
     ERROR = "ERROR_RULE",
   }
 
@@ -23,6 +25,9 @@ enum Rule {
     AND = 'AND',
     DIV = 'DIV',
     MOD = 'MOD',
+    NOT = 'NOT',
+    TRUE = 'TRUE',
+    FALSE = 'FALSE',
 
     // Операторы и знаки пунктуации
     MULTIPLICATION = '*',
@@ -44,6 +49,7 @@ enum Rule {
     ASSIGN = '=',
     DOT = '.',
     DOUBLE_EQ = '==',
+    NEGATION = '!',
 
     // Литералы и идентификаторы
     IDENTIFIER = 'IDENTIFIER',
@@ -59,7 +65,6 @@ enum Rule {
     ERROR = 'ERROR',
     EOF = 'EOF'
 }
-
 
   type Position = {
     line: number;
