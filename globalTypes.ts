@@ -7,6 +7,9 @@ enum Lexeme {
     AND = 'AND',
     DIV = 'DIV',
     MOD = 'MOD',
+    NOT = 'NOT',
+    TRUE = 'TRUE',
+    FALSE = 'FALSE',
 
     // Операторы и знаки пунктуации
     MULTIPLICATION = '*',
@@ -28,6 +31,7 @@ enum Lexeme {
     ASSIGN = '=',
     DOT = '.',
     DOUBLE_EQ = '==',
+    NEGATION = '!',
 
     // Литералы и идентификаторы
     IDENTIFIER = 'IDENTIFIER',

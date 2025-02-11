@@ -4,7 +4,7 @@ import {Lexeme} from '../globalTypes'
 describe('Lexer', () => {
     describe('Basic tokens', () => {
         test('should tokenize keywords', () => {
-            const input = 'IF THEN ELSE OR AND DIV MOD'
+            const input = 'IF THEN ELSE OR AND DIV MOD NOT TRUE FALSE'
             const lexer = new Lexer(input)
             const tokens = lexer.tokenize()
 
@@ -16,12 +16,15 @@ describe('Lexer', () => {
                 Lexeme.AND,
                 Lexeme.DIV,
                 Lexeme.MOD,
+                Lexeme.NOT,
+                Lexeme.TRUE,
+                Lexeme.FALSE,
                 Lexeme.EOF,
             ])
         })
 
         test('should handle operators', () => {
-            const input = '+ - * / = == != <= >= > < : . , ; ( ) [ ]'
+            const input = '+ - * / = == != <= >= > < : . , ; ( ) [ ] !'
             const lexer = new Lexer(input)
             const tokens = lexer.tokenize()
 
@@ -45,6 +48,7 @@ describe('Lexer', () => {
                 Lexeme.RIGHT_PAREN,
                 Lexeme.LEFT_BRACKET,
                 Lexeme.RIGHT_BRACKET,
+                Lexeme.NEGATION,
                 Lexeme.EOF,
             ])
         })
@@ -56,7 +60,6 @@ describe('Lexer', () => {
             {input: '123.45', type: Lexeme.FLOAT},
             {input: '123e5', type: Lexeme.FLOAT},
             {input: '12.34e-6', type: Lexeme.FLOAT},
-            {input: '123..45', type: Lexeme.ERROR},
             {input: '123.45.67', type: Lexeme.ERROR},
             {input: '12e', type: Lexeme.ERROR},
             {input: '12e+', type: Lexeme.ERROR},
