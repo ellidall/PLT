@@ -1,6 +1,8 @@
+// main.ts
 import path from 'path'
 import fs from 'fs'
-import {Analyzer} from './analyzer'
+import {SyntaxAnalyzer} from './analyzer'
+import {Lexer} from './lexer/lexer'
 
 function main() {
     const args = process.argv.slice(2)
@@ -19,15 +21,17 @@ function main() {
 
         const inputText = fs.readFileSync(inputPath, 'utf8')
 
-        const analyzer = new Analyzer(inputText)
+        // Получаем токены с помощью лексера
+        const lexer = new Lexer(inputText)
+        const tokens = lexer.tokenize()
 
-        // fs.writeFileSync(outputPath, JSON.stringify(tokens, null, 2), 'utf8');
-        // console.log(`Tokens written to ${outputPath}`);
-
-        const formattedTokens = analyzer.process()
-        fs.writeFileSync(outputFile, formattedTokens, 'utf8')
-        console.log(`Formatted tokens written to ${outputFile}`)
-    } catch (error) {
+        // Анализируем выражение с помощью синтаксического анализатора
+        const analyzer = new SyntaxAnalyzer()
+        analyzer.scanExpression(tokens, (message: string) => {
+            fs.writeFileSync(outputPath, message, 'utf8')
+            console.log(`Результат: ${message}`)
+        })
+    } catch (error: any) {
         console.error('Error:', error.message)
         process.exit(1)
     }

@@ -1,22 +1,6 @@
-enum Rule {
-    RELATION_OPERATOR = 'RELATION_OPERATOR',  // == | != | < | > | <= | >=
-    PLUS = '+',  // + | - | OR
-    MINUS = '-',
-    MULO = 'MULO',  // AND | * | / | MOD | DIV
-    SUPO = 'SUPO',  // = (унарное) | () | not
-    RULE_NUMBER_LITERAL = 'NUMBER_LITERAL',
-    RULE_IDENTIFIER = 'IDENTIFIER',
-    LEFT_PAREN = 'LEFT_PAREN',
-    RIGHT_PAREN = 'RIGHT_PAREN',
-    LEFT_BRACKET = '[',
-    RIGHT_BRACKET = ']',
-    COMMA = ',',
-    DOT = '.',
-    NOT = 'NOT',
-    ERROR = "ERROR_RULE",
-  }
+// globalTypes.ts
 
-  enum Lexeme {
+export enum Lexeme {
     // Ключевые слова
     IF = 'IF',
     THEN = 'THEN',
@@ -66,15 +50,13 @@ enum Rule {
     EOF = 'EOF'
 }
 
-  type Position = {
+export type Position = {
     line: number;
     column: number;
-  };
+};
 
-  type Token = {
+export type Token = {
     type: Lexeme;
     lexeme: string;
     position: Position;
 };
-
-  export { Rule, Lexeme, Position, Token };

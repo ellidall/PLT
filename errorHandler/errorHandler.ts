@@ -7,8 +7,13 @@ class ErrorHandler {
     addError(errorCode: ErrorCode, token?: Token) {
         let message = errorMessages[errorCode]
 
-        if (token && message.includes('{token}')) {
-            message = message.replace(/{token}/g, token.lexeme)
+        if (!token) {
+            // Если токен отсутствует, значит достигнут конец ввода
+            message = 'Unexpected end of input'
+        } else if (message.includes('{token}')) {
+            // Если токен пустой, можно подставить более понятное значение
+            const tokenStr = token.lexeme || 'EOF'
+            message = message.replace(/{token}/g, tokenStr)
         }
 
         const errorLocation = token
