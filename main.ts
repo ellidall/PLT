@@ -27,10 +27,14 @@ function main() {
 
         // Анализируем выражение с помощью синтаксического анализатора
         const analyzer = new SyntaxAnalyzer()
-        analyzer.scanExpression(tokens, (message: string) => {
-            fs.writeFileSync(outputPath, message, 'utf8')
-            console.log(`Результат: ${message}`)
-        })
+
+        const result = analyzer.parse(tokens)
+        if (result) {
+            console.log('Успех!')
+        }
+        else {
+            console.log(analyzer.getErrors())
+        }
     } catch (error: any) {
         console.error('Error:', error.message)
         process.exit(1)
