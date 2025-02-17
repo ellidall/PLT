@@ -1,5 +1,5 @@
 enum ErrorCode {
-    E001 =  'E001',
+    E001 = 'E001',
     E002 = 'E002',
     E003 = 'E003',
     E004 = 'E004',
@@ -7,7 +7,7 @@ enum ErrorCode {
     E006 = 'E006',
     E007 = 'E007',
     E008 = 'E008',
-    E000 = 'E000',
+    E009 = 'E009',  // Новый код ошибки
 }
 
 const errorMessages = {
@@ -19,9 +19,7 @@ const errorMessages = {
     'E006': "Unclosed string literal",
     'E007': "Invalid operator/symbol '{token}'",
     'E008': "Unexpected end of float number",
-
-    // Общая ошибка для непредвиденных случаев
-    'E000': "Unrecognized token '{token}'"
+    'E009': "Unexpected token '{token}'",  // Новая ошибка
 }
 
 export {

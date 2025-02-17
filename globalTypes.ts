@@ -1,4 +1,22 @@
-enum Lexeme {
+enum Rule {
+    RELATION_OPERATOR = 'RELATION_OPERATOR',  // == | != | < | > | <= | >=
+    PLUS = '+',  // + | - | OR
+    MINUS = '-',
+    MULO = 'MULO',  // AND | * | / | MOD | DIV
+    SUPO = 'SUPO',  // = (унарное) | () | not
+    RULE_NUMBER_LITERAL = 'NUMBER_LITERAL',
+    RULE_IDENTIFIER = 'IDENTIFIER',
+    LEFT_PAREN = 'LEFT_PAREN',
+    RIGHT_PAREN = 'RIGHT_PAREN',
+    LEFT_BRACKET = '[',
+    RIGHT_BRACKET = ']',
+    COMMA = ',',
+    DOT = '.',
+    NOT = 'NOT',
+    ERROR = "ERROR_RULE",
+  }
+
+  enum Lexeme {
     // Ключевые слова
     IF = 'IF',
     THEN = 'THEN',
@@ -48,19 +66,15 @@ enum Lexeme {
     EOF = 'EOF'
 }
 
-type Position = {
+  type Position = {
     line: number;
     column: number;
-};
+  };
 
-type Token = {
+  type Token = {
     type: Lexeme;
     lexeme: string;
     position: Position;
 };
 
-export {
-    Lexeme,
-    Position,
-    Token,
-}
+  export { Rule, Lexeme, Position, Token };
