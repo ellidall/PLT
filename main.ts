@@ -21,11 +21,9 @@ function main() {
 
         const inputText = fs.readFileSync(inputPath, 'utf8')
 
-        // Получаем токены с помощью лексера
         const lexer = new Lexer(inputText)
         const tokens = lexer.tokenize()
 
-        // Анализируем выражение с помощью синтаксического анализатора
         const analyzer = new SyntaxAnalyzer()
 
         const result = analyzer.parse(tokens)

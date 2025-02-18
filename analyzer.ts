@@ -13,18 +13,17 @@ class SyntaxAnalyzer {
     }
 
     /**
-     * Основной метод разбора.
-     * Принимает массив токенов и возвращает true, если выражение разобрано корректно.
+     * Точка входа. Принимает массив токенов и возвращает true,
+     * если синтаксический разбор прошёл успешно (и остался только EOF).
      */
     public parse(tokens: Token[]): boolean {
         this.tokens = tokens
         this.currentIndex = 0
         this.errorHandler.clearErrors()
 
-        // Начинаем разбор с выражения
-        const success = this.parseExpression()
+        const success = this.parseLogicalOr()
 
-        // Если остались токены, отличные от EOF, это ошибка
+        // После разбора ожидаем EOF
         if (this.currentToken()?.type !== Lexeme.EOF) {
             this.errorHandler.addError(ErrorCode.E009, this.currentToken())
             return false
@@ -34,15 +33,79 @@ class SyntaxAnalyzer {
     }
 
     /**
-     * parseExpression → parseTerm { (PLUS | MINUS) parseTerm }
+     * LogicalOr → LogicalAnd { OR LogicalAnd }
      */
-    private parseExpression(): boolean {
+    private parseLogicalOr(): boolean {
+        if (!this.parseLogicalAnd()) {
+            this.errorHandler.addError(ErrorCode.E009, this.currentToken())
+            return false
+        }
+        while (this.currentToken()?.type === Lexeme.OR) {
+            this.advance() // съедаем OR
+            if (!this.parseLogicalAnd()) {
+                this.errorHandler.addError(ErrorCode.E009, this.currentToken())
+                return false
+            }
+        }
+        return true
+    }
+
+    /**
+     * LogicalAnd → Relational { AND Relational }
+     */
+    private parseLogicalAnd(): boolean {
+        if (!this.parseRelational()) {
+            this.errorHandler.addError(ErrorCode.E009, this.currentToken())
+            return false
+        }
+        while (this.currentToken()?.type === Lexeme.AND) {
+            this.advance() // съедаем AND
+            if (!this.parseRelational()) {
+                this.errorHandler.addError(ErrorCode.E009, this.currentToken())
+                return false
+            }
+        }
+        return true
+    }
+
+    /**
+     * Relational → Additive { (LESS | GREATER | LESS_EQ | GREATER_EQ | DOUBLE_EQ | NOT_EQ) Additive }
+     */
+    private parseRelational(): boolean {
+        if (!this.parseAdditive()) {
+            this.errorHandler.addError(ErrorCode.E009, this.currentToken())
+            return false
+        }
+        while (
+            this.currentToken()?.type === Lexeme.LESS ||
+            this.currentToken()?.type === Lexeme.GREATER ||
+            this.currentToken()?.type === Lexeme.LESS_EQ ||
+            this.currentToken()?.type === Lexeme.GREATER_EQ ||
+            this.currentToken()?.type === Lexeme.DOUBLE_EQ ||
+            this.currentToken()?.type === Lexeme.NOT_EQ
+            ) {
+            this.advance() // съедаем реляционный оператор
+            if (!this.parseAdditive()) {
+                this.errorHandler.addError(ErrorCode.E009, this.currentToken())
+                return false
+            }
+        }
+        return true
+    }
+
+    /**
+     * Additive → Term { (PLUS | MINUS) Term }
+     */
+    private parseAdditive(): boolean {
         if (!this.parseTerm()) {
             this.errorHandler.addError(ErrorCode.E009, this.currentToken())
             return false
         }
-        while (this.currentToken()?.type === Lexeme.PLUS || this.currentToken()?.type === Lexeme.MINUS) {
-            this.advance() // съедаем оператор
+        while (
+            this.currentToken()?.type === Lexeme.PLUS ||
+            this.currentToken()?.type === Lexeme.MINUS
+            ) {
+            this.advance() // съедаем + или -
             if (!this.parseTerm()) {
                 this.errorHandler.addError(ErrorCode.E009, this.currentToken())
                 return false
@@ -52,14 +115,19 @@ class SyntaxAnalyzer {
     }
 
     /**
-     * parseTerm → parseFactor { (MULTIPLICATION | DIVIDE) parseFactor }
+     * Term → Factor { (MULTIPLICATION | DIVIDE | MOD) Factor }
      */
     private parseTerm(): boolean {
         if (!this.parseFactor()) {
+            this.errorHandler.addError(ErrorCode.E009, this.currentToken())
             return false
         }
-        while (this.currentToken()?.type === Lexeme.MULTIPLICATION || this.currentToken()?.type === Lexeme.DIVIDE) {
-            this.advance() // съедаем оператор
+        while (
+            this.currentToken()?.type === Lexeme.MULTIPLICATION ||
+            this.currentToken()?.type === Lexeme.DIVIDE ||
+            this.currentToken()?.type === Lexeme.MOD
+            ) {
+            this.advance() // съедаем *, / или MOD
             if (!this.parseFactor()) {
                 this.errorHandler.addError(ErrorCode.E009, this.currentToken())
                 return false
@@ -69,8 +137,9 @@ class SyntaxAnalyzer {
     }
 
     /**
-     * parseFactor → [NOT | MINUS] parsePrimary
-     * (Унарный плюс не разрешён)
+     * Factor → [NOT | MINUS | PLUS] Factor | Primary
+     *
+     * Теперь разрешаем унарный плюс. Все три оператора обрабатываются одинаково.
      */
     private parseFactor(): boolean {
         const token = this.currentToken()
@@ -78,28 +147,19 @@ class SyntaxAnalyzer {
             this.errorHandler.addError(ErrorCode.E009, token)
             return false
         }
-
-        if (token.type === Lexeme.NOT || token.type === Lexeme.MINUS) {
-            // Унарный оператор
-            this.advance()
-            return this.parsePrimary()
+        if (
+            token.type === Lexeme.NOT ||
+            token.type === Lexeme.MINUS ||
+            token.type === Lexeme.PLUS
+        ) {
+            this.advance() // съедаем унарный оператор
+            return this.parseFactor()
         }
-
-        if (token.type === Lexeme.PLUS) {
-            // Унарный плюс не разрешён
-            this.errorHandler.addError(ErrorCode.E009, token)
-            return false
-        }
-
         return this.parsePrimary()
     }
 
     /**
-     * parsePrimary →
-     *    IDENTIFIER | INTEGER | FLOAT { suffix }
-     *  | LEFT_PAREN parseExpression RIGHT_PAREN
-     *
-     * suffix → ( arrayIndex | functionCall | propertyAccess )*
+     * Primary → IDENTIFIER | INTEGER | FLOAT | TRUE | FALSE { Suffix } | ( LogicalOr )
      */
     private parsePrimary(): boolean {
         const token = this.currentToken()
@@ -111,16 +171,18 @@ class SyntaxAnalyzer {
         if (
             token.type === Lexeme.IDENTIFIER ||
             token.type === Lexeme.INTEGER ||
-            token.type === Lexeme.FLOAT
+            token.type === Lexeme.FLOAT ||
+            token.type === Lexeme.TRUE ||
+            token.type === Lexeme.FALSE
         ) {
-            this.advance() // съедаем идентификатор или число
+            this.advance() // съедаем базовый токен
 
-            // Обработка суффиксов (индексация, вызов функции, обращение к полю)
+            // Обрабатываем возможные суффиксы: индексирование, вызов функции, обращение к свойствам
             while (true) {
-                // Индексация: [expression]
+                // Индексация: [ Expression ]
                 if (this.currentToken()?.type === Lexeme.LEFT_BRACKET) {
                     this.advance() // съедаем '['
-                    if (!this.parseExpression()) {
+                    if (!this.parseLogicalOr()) {
                         this.errorHandler.addError(ErrorCode.E009, this.currentToken())
                         return false
                     }
@@ -130,10 +192,11 @@ class SyntaxAnalyzer {
                     }
                     continue
                 }
-                // Вызов функции: (argumentList)
+                // Вызов функции: ( ArgumentList )
                 if (this.currentToken()?.type === Lexeme.LEFT_PAREN) {
                     this.advance() // съедаем '('
                     if (!this.parseArgumentList()) {
+                        this.errorHandler.addError(ErrorCode.E009, this.currentToken())
                         return false
                     }
                     if (!this.match(Lexeme.RIGHT_PAREN)) {
@@ -142,17 +205,17 @@ class SyntaxAnalyzer {
                     }
                     continue
                 }
-                // Обращение к полю или вызов метода: .IDENTIFIER [ (argumentList) ]
+                // Обращение к полю: .IDENTIFIER [ ( ArgumentList ) ]
                 if (this.currentToken()?.type === Lexeme.DOT) {
                     this.advance() // съедаем '.'
                     if (!this.match(Lexeme.IDENTIFIER)) {
                         this.errorHandler.addError(ErrorCode.E009, this.currentToken())
                         return false
                     }
-                    // Возможен вызов метода после точки
                     if (this.currentToken()?.type === Lexeme.LEFT_PAREN) {
                         this.advance() // съедаем '('
                         if (!this.parseArgumentList()) {
+                            this.errorHandler.addError(ErrorCode.E009, this.currentToken())
                             return false
                         }
                         if (!this.match(Lexeme.RIGHT_PAREN)) {
@@ -167,10 +230,11 @@ class SyntaxAnalyzer {
             return true
         }
 
-        // Разбор группировки: (expression)
+        // Группировка: ( LogicalOr )
         if (token.type === Lexeme.LEFT_PAREN) {
             this.advance() // съедаем '('
-            if (!this.parseExpression()) {
+            if (!this.parseLogicalOr()) {
+                this.errorHandler.addError(ErrorCode.E009, this.currentToken())
                 return false
             }
             if (!this.match(Lexeme.RIGHT_PAREN)) {
@@ -180,25 +244,24 @@ class SyntaxAnalyzer {
             return true
         }
 
-        // Если ни один из вариантов не подошёл, это ошибка
         this.errorHandler.addError(ErrorCode.E009, token)
         return false
     }
 
     /**
-     * parseArgumentList → [ expression { COMMA expression } ]
+     * ArgumentList → [ LogicalOr { , LogicalOr } ]
      */
     private parseArgumentList(): boolean {
-        // Если сразу встречается RIGHT_PAREN, аргументов нет
         if (this.currentToken()?.type === Lexeme.RIGHT_PAREN) {
-            return true
+            return true // пустой список аргументов
         }
-        if (!this.parseExpression()) {
+        if (!this.parseLogicalOr()) {
+            this.errorHandler.addError(ErrorCode.E009, this.currentToken())
             return false
         }
         while (this.currentToken()?.type === Lexeme.COMMA) {
-            this.advance() // съедаем ','
-            if (!this.parseExpression()) {
+            this.advance() // съедаем запятую
+            if (!this.parseLogicalOr()) {
                 this.errorHandler.addError(ErrorCode.E009, this.currentToken())
                 return false
             }
@@ -208,7 +271,7 @@ class SyntaxAnalyzer {
 
     /**
      * match проверяет, соответствует ли текущий токен ожидаемому типу.
-     * Если соответствует — съедает его (advance) и возвращает true.
+     * Если соответствует — съедает его и возвращает true.
      */
     private match(expected: Lexeme): boolean {
         if (this.currentToken()?.type === expected) {

@@ -1,1 +1,1 @@
-myVar + 12..34 * (func1(5, 6) - arr[2])
++NOT - NOT - + NOT - (-NOT a)

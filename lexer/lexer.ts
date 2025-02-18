@@ -97,105 +97,124 @@ class Lexer {
     }
 
     private number(): Token {
-        const startColumn = this.column
-        const startLine = this.line
-        let result = ''
-        let isFloat = false
-        let dotCount = 0
+        const startColumn = this.column;
+        const startLine = this.line;
+        let result = '';
+        let isFloat = false;
+        let dotCount = 0;
 
+        // Считываем целую часть числа (цифры)
         while (this.currentChar && /\d/.test(this.currentChar)) {
-            result += this.currentChar
-            this.advance()
+            result += this.currentChar;
+            this.advance();
         }
 
+        // Если целая часть содержит более одной цифры и начинается с '0' – ошибка (например, "05")
+        if (result.length > 1 && result[0] === '0') {
+            // Дополнительно считываем оставшиеся цифры, если они есть
+            while (this.currentChar && /\d/.test(this.currentChar)) {
+                result += this.currentChar;
+                this.advance();
+            }
+            return {
+                type: Lexeme.ERROR,
+                lexeme: result,
+                position: { line: startLine, column: startColumn },
+            };
+        }
+
+        // Если текущий символ – точка, но за ней следует ещё точка, возвращаем целое число
         if (this.currentChar === '.' && this.peek() === '.') {
             return {
                 type: Lexeme.INTEGER,
                 lexeme: result,
-                position: {line: startLine, column: startColumn},
-            }
+                position: { line: startLine, column: startColumn },
+            };
         }
 
+        // Если текущий символ – точка, обрабатываем дробную часть
         if (this.currentChar === '.') {
             while (this.currentChar === '.') {
-                result += this.currentChar
-                dotCount++
-                this.advance()
+                result += this.currentChar;
+                dotCount++;
+                this.advance();
             }
             if (dotCount > 1 || !/\d/.test(this.currentChar || '')) {
                 while (this.currentChar && /[a-zA-Z\d.]/.test(this.currentChar)) {
-                    result += this.currentChar
-                    this.advance()
+                    result += this.currentChar;
+                    this.advance();
                 }
                 return {
                     type: Lexeme.ERROR,
                     lexeme: result,
-                    position: {line: startLine, column: startColumn},
-                }
+                    position: { line: startLine, column: startColumn },
+                };
             }
-            isFloat = true
-
+            isFloat = true;
             while (this.currentChar && /\d/.test(this.currentChar)) {
-                result += this.currentChar
-                this.advance()
+                result += this.currentChar;
+                this.advance();
             }
         }
 
+        // Обработка экспоненты (e или E)
         if (this.currentChar?.toLowerCase() === 'e') {
-            result += this.currentChar
-            this.advance()
-
+            result += this.currentChar;
+            this.advance();
             if (this.currentChar === '+' || this.currentChar === '-') {
-                result += this.currentChar
-                this.advance()
+                result += this.currentChar;
+                this.advance();
             }
-
             if (!/\d/.test(this.currentChar || '')) {
                 return {
                     type: Lexeme.ERROR,
                     lexeme: result,
-                    position: {line: startLine, column: startColumn},
-                }
+                    position: { line: startLine, column: startColumn },
+                };
             }
-
             while (this.currentChar && /\d/.test(this.currentChar)) {
-                result += this.currentChar
-                this.advance()
+                result += this.currentChar;
+                this.advance();
             }
-
-            isFloat = true
+            isFloat = true;
         }
 
         if (this.currentChar === '.') {
-            while (this.currentChar && this.currentChar !== ('\n' as string) && this.currentChar !== (' ' as string)) {
-                result += this.currentChar
-                this.advance()
+            result += this.currentChar;
+            this.advance();
+            let curr: string | null = this.currentChar;
+            while (curr && curr !== '\n' && curr !== ' ') {
+                result += curr;
+                this.advance();
+                curr = this.currentChar;
             }
             return {
                 type: Lexeme.ERROR,
                 lexeme: result,
-                position: {line: startLine, column: startColumn},
-            }
+                position: { line: startLine, column: startColumn },
+            };
         }
+
 
         if (/[a-zA-Z_а-яА-Я]/.test(this.currentChar || '')) {
             while (this.currentChar && !/\s/.test(this.currentChar)) {
-                result += this.currentChar
-                this.advance()
+                result += this.currentChar;
+                this.advance();
             }
             return {
                 type: Lexeme.ERROR,
                 lexeme: result,
-                position: {line: startLine, column: startColumn},
-            }
+                position: { line: startLine, column: startColumn },
+            };
         }
 
         return {
             type: isFloat ? Lexeme.FLOAT : Lexeme.INTEGER,
             lexeme: result,
-            position: {line: startLine, column: startColumn},
-        }
+            position: { line: startLine, column: startColumn },
+        };
     }
+
 
     private identifierOrInvalid(): Token {
         const startColumn = this.column
